@@ -4,16 +4,24 @@ import BackgroundImage from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
 import { Input } from "@components/Input";
 import { Button } from "@components/Button";
+import { useNavigation } from "@react-navigation/native";
 
 export function SignUp() {
+  const navigation = useNavigation();
+
+  function handleNavigationToSignIn() {
+    navigation.goBack();
+  }
+
   return (
     <ScrollView
       contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
     >
-      <VStack flex={1} bg={"gray.700"} px={8}>
+      <VStack flex={1} px={8}>
         <Image
           source={BackgroundImage}
+          defaultSource={BackgroundImage}
           alt="People training in a gym"
           resizeMode="contain"
           position={"absolute"}
@@ -42,12 +50,16 @@ export function SignUp() {
             autoCorrect={false}
           />
           <Input placeholder="Password" secureTextEntry mb={4} />
-          <Input placeholder="Confirm password" secureTextEntry mb={4} />
+          {/* <Input placeholder="Confirm password" secureTextEntry mb={4} /> */}
           <Button title="Create" />
         </Center>
 
         <Center mt={24} style={{ gap: 12 }}>
-          <Button variant={"outline"} title="Create an account" />
+          <Button
+            variant={"outline"}
+            title="Back to login"
+            onPress={handleNavigationToSignIn}
+          />
         </Center>
       </VStack>
     </ScrollView>
