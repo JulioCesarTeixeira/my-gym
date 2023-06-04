@@ -8,6 +8,7 @@ export function Input({ ...props }: InputProps) {
       bg={"gray.700"}
       h={12}
       px={4}
+      mb={4}
       borderWidth={0}
       fontSize={"md"}
       color={"white"}
