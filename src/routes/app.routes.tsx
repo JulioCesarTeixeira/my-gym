@@ -15,7 +15,7 @@ import HomeIcon from "@assets/home.svg";
 import HistoryIcon from "@assets/history.svg";
 import ProfileIcon from "@assets/profile.svg";
 
-type AppRoutes = {
+export type AppRoutes = {
   home: undefined;
   history: undefined;
   profile: undefined;

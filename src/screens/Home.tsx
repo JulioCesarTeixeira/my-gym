@@ -1,10 +1,13 @@
 import { ExerciseCard } from "@components/ExerciseCard";
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
+import { useNavigation } from "@react-navigation/native";
+import { AppRoutesProps } from "@routes/app.routes";
 import { Center, HStack, Text, VStack, FlatList, Heading } from "native-base";
 import { useState } from "react";
 
 export function Home() {
+  const { navigate } = useNavigation<AppRoutesProps>();
   const [groups, setGroups] = useState([
     "back",
     "chest",
@@ -45,6 +48,12 @@ export function Home() {
     },
   ]);
 
+  function handleExerciseSelect(id: string) {
+    navigate("exercise", {
+      id,
+    });
+  }
+
   return (
     <VStack flex={1}>
       <HomeHeader />
@@ -84,6 +93,7 @@ export function Home() {
               name={item.name}
               description={item.description}
               image={item.image}
+              onPress={() => handleExerciseSelect(item.id)}
             />
           )}
           showsVerticalScrollIndicator={false}

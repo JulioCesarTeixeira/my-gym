@@ -20,7 +20,11 @@ export function Profile() {
   return (
     <VStack flex={1}>
       <ScreenHeader name="Profile" />
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: 36,
+        }}
+      >
         <Center mt={6} px={10}>
           {isPhotoLoading ? (
             <Skeleton
@@ -56,7 +60,7 @@ export function Profile() {
             isDisabled
           />
         </Center>
-        <VStack px={10} mt={8} mb={20}>
+        <VStack px={10} mt={12}>
           <Heading
             color={"gray.200"}
             fontSize={"md"}
