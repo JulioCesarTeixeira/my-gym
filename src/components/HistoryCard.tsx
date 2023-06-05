@@ -31,7 +31,7 @@ export function HistoryCard({ name, description, time }: Props) {
         </Text>
       </VStack>
 
-      <Text color="gray.200" fontSize={"md"} mt={1} numberOfLines={2}>
+      <Text color="gray.200" fontSize={"md"} mt={1} numberOfLines={1}>
         {time?.toString() ?? "1hr ago"}
       </Text>
     </HStack>

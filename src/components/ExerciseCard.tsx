@@ -27,6 +27,7 @@ export function ExerciseCard({ name, description, image, ...rest }: Props) {
           alt="fitness image"
           width={16}
           height={16}
+          resizeMode="cover"
           mr={4}
           rounded={"md"}
         />

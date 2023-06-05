@@ -73,6 +73,7 @@ export function Home() {
           _contentContainerStyle={{ px: 8 }}
           my={10}
           maxHeight={10}
+          minHeight={10}
         />
       </HStack>
       <VStack flex={1} px={8}>

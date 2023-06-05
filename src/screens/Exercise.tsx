@@ -7,6 +7,7 @@ import {
   VStack,
   Image,
   Box,
+  ScrollView,
 } from "native-base";
 import { TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -57,37 +58,43 @@ export function Exercise({ route, navigation }: Props) {
         </HStack>
       </VStack>
 
-      <VStack p={8}>
-        <Image
-          source={{
-            uri: "https://images.unsplash.com/photo-1534872850130-5355701fcc89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1348&q=80",
-          }}
-          alt={"Lat pulldown"}
-          w="full"
-          h={80}
-          mb={3}
-          rounded="lg"
-          resizeMode="cover"
-        />
+      <ScrollView>
+        <VStack p={8}>
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/photo-1534872850130-5355701fcc89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1348&q=80",
+            }}
+            alt={"Lat pulldown"}
+            w="full"
+            h={80}
+            mb={3}
+            rounded="lg"
+            resizeMode="cover"
+          />
 
-        <Box bg={"gray.600"} rounded={"md"} px={4} py={4}>
-          <HStack alignItems={"center"} justifyContent={"space-around"} mb={6}>
-            <HStack alignItems={"center"}>
-              <SeriesSvg />
-              <Text ml={2} color="gray.200">
-                3 sets
-              </Text>
+          <Box bg={"gray.600"} rounded={"md"} px={4} py={4}>
+            <HStack
+              alignItems={"center"}
+              justifyContent={"space-around"}
+              mb={6}
+            >
+              <HStack alignItems={"center"}>
+                <SeriesSvg />
+                <Text ml={2} color="gray.200">
+                  3 sets
+                </Text>
+              </HStack>
+              <HStack alignItems={"center"}>
+                <RepsSvg />
+                <Text ml={2} color="gray.200">
+                  12 reps
+                </Text>
+              </HStack>
             </HStack>
-            <HStack alignItems={"center"}>
-              <RepsSvg />
-              <Text ml={2} color="gray.200">
-                12 reps
-              </Text>
-            </HStack>
-          </HStack>
-          <Button title="Complete exercise" />
-        </Box>
-      </VStack>
+            <Button title="Complete exercise" />
+          </Box>
+        </VStack>
+      </ScrollView>
     </VStack>
   );
 }
