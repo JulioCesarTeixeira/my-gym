@@ -11,12 +11,55 @@ import {
   Heading,
 } from "native-base";
 import { useState } from "react";
-import { TouchableOpacity } from "react-native";
+import { Alert, TouchableOpacity } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 
 const PHOTO_SIZE = 33;
 export function Profile() {
   const [isPhotoLoading, setIsPhotoLoading] = useState(false);
+  const [userPhoto, setUserPhoto] = useState<string>(
+    "https://github.com/JulioCesarTeixeira.png"
+  );
 
+  async function handlePickImage() {
+    try {
+      setIsPhotoLoading(true);
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Sorry, we need camera roll permissions to make this work!");
+        return;
+      }
+      const selectedPhoto = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        allowsMultipleSelection: false,
+        quality: 1,
+        aspect: [4, 4],
+      });
+
+      if (selectedPhoto.canceled) return;
+
+      if (selectedPhoto.assets[0].uri) {
+        const photoInfo = await FileSystem.getInfoAsync(
+          selectedPhoto.assets[0].uri
+        );
+
+        if (photoInfo.exists && photoInfo.size / 1024 / 1024 > 5) {
+          return Alert.alert("Error", "Image size must be less than 10MB");
+        }
+
+        console.log(photoInfo);
+
+        setUserPhoto(selectedPhoto.assets[0].uri);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsPhotoLoading(false);
+    }
+  }
   return (
     <VStack flex={1}>
       <ScreenHeader name="Profile" />
@@ -37,11 +80,11 @@ export function Profile() {
           ) : (
             <UserPhoto
               size={PHOTO_SIZE}
-              source={{ uri: "https://github.com/JulioCesarTeixeira.png" }}
+              source={{ uri: userPhoto }}
               alt={"User profile photo"}
             />
           )}
-          <TouchableOpacity onPress={() => setIsPhotoLoading(!isPhotoLoading)}>
+          <TouchableOpacity onPress={handlePickImage}>
             <Text
               color={"green.500"}
               fontSize={"md"}
