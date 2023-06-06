@@ -1,4 +1,5 @@
 import { VStack, Text, Image, Center, Heading, ScrollView } from "native-base";
+import { z } from "zod";
 
 import BackgroundImage from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
@@ -7,6 +8,7 @@ import { Button } from "@components/Button";
 import { useNavigation } from "@react-navigation/native";
 
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type FormDataProps = {
   name: string;
@@ -15,11 +17,23 @@ type FormDataProps = {
   password_confirm: string;
 };
 
+const signUpSchema = z.object({
+  name: z.string({ required_error: "Name is required." }),
+  email: z
+    .string({ required_error: "Email is required." })
+    .email({ message: "Email is invalid." }),
+  password: z.string({ required_error: "Password is required." }).min(6),
+  password_confirm: z
+    .string({ required_error: "Please, confirm your password." })
+    .min(6),
+});
+
 export function SignUp() {
   const navigation = useNavigation();
 
   const { control, handleSubmit } = useForm<FormDataProps>({
     reValidateMode: "onChange",
+    resolver: zodResolver(signUpSchema),
   });
 
   function handleNavigationToSignIn() {
@@ -66,12 +80,6 @@ export function SignUp() {
           <Controller
             control={control}
             name="name"
-            rules={{
-              required: {
-                value: true,
-                message: "Name is required",
-              },
-            }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
@@ -88,17 +96,6 @@ export function SignUp() {
           <Controller
             control={control}
             name="email"
-            rules={{
-              required: {
-                value: true,
-                message: "E-mail is required",
-              },
-              // Validate standard e-mail format
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "E-mail is invalid",
-              },
-            }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
@@ -117,12 +114,6 @@ export function SignUp() {
           <Controller
             control={control}
             name="password"
-            rules={{
-              required: {
-                value: true,
-                message: "Password is required",
-              },
-            }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
@@ -138,12 +129,6 @@ export function SignUp() {
           <Controller
             control={control}
             name="password_confirm"
-            rules={{
-              required: {
-                value: true,
-                message: "Password confirmation is required",
-              },
-            }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
