@@ -9,14 +9,16 @@ import {
   VStack,
   Skeleton,
   Heading,
+  useToast,
 } from "native-base";
 import { useState } from "react";
-import { Alert, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 
 const PHOTO_SIZE = 33;
 export function Profile() {
+  const { show } = useToast();
   const [isPhotoLoading, setIsPhotoLoading] = useState(false);
   const [userPhoto, setUserPhoto] = useState<string>(
     "https://github.com/JulioCesarTeixeira.png"
@@ -46,8 +48,13 @@ export function Profile() {
           selectedPhoto.assets[0].uri
         );
 
-        if (photoInfo.exists && photoInfo.size / 1024 / 1024 > 5) {
-          return Alert.alert("Error", "Image size must be less than 10MB");
+        if (photoInfo.exists && photoInfo.size / 1024 / 1024 > 3) {
+          return show({
+            title: "Image size is too big",
+            placement: "top",
+            bg: "red.500",
+            duration: 3000,
+          });
         }
 
         console.log(photoInfo);
