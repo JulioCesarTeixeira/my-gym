@@ -18,7 +18,9 @@ type FormDataProps = {
 export function SignUp() {
   const navigation = useNavigation();
 
-  const { control, formState, handleSubmit } = useForm<FormDataProps>();
+  const { control, handleSubmit } = useForm<FormDataProps>({
+    reValidateMode: "onChange",
+  });
 
   function handleNavigationToSignIn() {
     navigation.goBack();
@@ -35,7 +37,7 @@ export function SignUp() {
 
   return (
     <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: 36 }}
       showsVerticalScrollIndicator={false}
     >
       <VStack flex={1} px={8}>
@@ -55,8 +57,8 @@ export function SignUp() {
           <Heading
             color={"white"}
             fontSize={"xl"}
-            mb={4}
             fontFamily={"heading"}
+            mb={6}
           >
             Create an account
           </Heading>
@@ -70,18 +72,15 @@ export function SignUp() {
                 message: "Name is required",
               },
             }}
-            render={({ field: { onChange, value }, fieldState }) => (
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
-                  mb={4}
                   placeholder="Name"
                   autoCorrect={false}
                   onChangeText={onChange}
                   value={value}
+                  errorMessage={error?.message}
                 />
-                {fieldState.error && (
-                  <Text color={"red.500"}>{fieldState.error.message}</Text>
-                )}
               </>
             )}
           />
@@ -94,19 +93,23 @@ export function SignUp() {
                 value: true,
                 message: "E-mail is required",
               },
+              // Validate standard e-mail format
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "E-mail is invalid",
+              },
             }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
-                  mb={4}
                   placeholder="E-mail"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
                   onChangeText={onChange}
                   value={value}
+                  errorMessage={error?.message}
                 />
-                {error && <Text color={"red.500"}>{error.message}</Text>}
               </>
             )}
           />
@@ -125,11 +128,10 @@ export function SignUp() {
                 <Input
                   placeholder="Password"
                   secureTextEntry
-                  mb={4}
                   onChangeText={onChange}
                   value={value}
+                  errorMessage={error?.message}
                 />
-                {error && <Text color={"red.500"}>{error.message}</Text>}
               </>
             )}
           />
@@ -147,18 +149,17 @@ export function SignUp() {
                 <Input
                   placeholder="Confirm password"
                   secureTextEntry
-                  mb={4}
                   onChangeText={onChange}
                   value={value}
+                  errorMessage={error?.message}
                   onSubmitEditing={handleSubmit(handleCreateAccount)}
                   returnKeyType="send"
                 />
-                {error && <Text color={"red.500"}>{error.message}</Text>}
               </>
             )}
           />
 
-          {/* <Input placeholder="Confirm password" secureTextEntry mb={4} /> */}
+          {/* <Input placeholder="Confirm password" secureTextEntry /> */}
           <Button title="Create" onPress={handleSubmit(handleCreateAccount)} />
         </Center>
 
