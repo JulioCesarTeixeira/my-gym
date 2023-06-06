@@ -10,23 +10,25 @@ import { useNavigation } from "@react-navigation/native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-type FormDataProps = {
-  name: string;
-  email: string;
-  password: string;
-  password_confirm: string;
-};
+const signUpSchema = z
+  .object({
+    name: z.string({ required_error: "Name is required." }),
+    email: z
+      .string({ required_error: "Email is required." })
+      .email({ message: "Email is invalid." }),
+    password: z
+      .string({ required_error: "Password is required." })
+      .min(6, { message: "Password must have at least 6 characters." }),
+    password_confirm: z
+      .string({ required_error: "Please, confirm your password." })
+      .min(6),
+  })
+  .refine((data) => data.password === data.password_confirm, {
+    message: "Passwords must match.",
+    path: ["password_confirm"],
+  });
 
-const signUpSchema = z.object({
-  name: z.string({ required_error: "Name is required." }),
-  email: z
-    .string({ required_error: "Email is required." })
-    .email({ message: "Email is invalid." }),
-  password: z.string({ required_error: "Password is required." }).min(6),
-  password_confirm: z
-    .string({ required_error: "Please, confirm your password." })
-    .min(6),
-});
+type FormDataProps = z.infer<typeof signUpSchema>;
 
 export function SignUp() {
   const navigation = useNavigation();
