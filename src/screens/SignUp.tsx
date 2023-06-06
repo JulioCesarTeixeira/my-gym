@@ -6,11 +6,31 @@ import { Input } from "@components/Input";
 import { Button } from "@components/Button";
 import { useNavigation } from "@react-navigation/native";
 
+import { useForm, Controller } from "react-hook-form";
+
+type FormDataProps = {
+  name: string;
+  email: string;
+  password: string;
+  password_confirm: string;
+};
+
 export function SignUp() {
   const navigation = useNavigation();
 
+  const { control, formState, handleSubmit } = useForm<FormDataProps>();
+
   function handleNavigationToSignIn() {
     navigation.goBack();
+  }
+
+  function handleCreateAccount({
+    name,
+    email,
+    password,
+    password_confirm,
+  }: FormDataProps) {
+    console.log({ name, email, password, password_confirm });
   }
 
   return (
@@ -41,17 +61,105 @@ export function SignUp() {
             Create an account
           </Heading>
 
-          <Input mb={4} placeholder="Name" autoCorrect={false} />
-          <Input
-            mb={4}
-            placeholder="E-mail"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
+          <Controller
+            control={control}
+            name="name"
+            rules={{
+              required: {
+                value: true,
+                message: "Name is required",
+              },
+            }}
+            render={({ field: { onChange, value }, fieldState }) => (
+              <>
+                <Input
+                  mb={4}
+                  placeholder="Name"
+                  autoCorrect={false}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {fieldState.error && (
+                  <Text color={"red.500"}>{fieldState.error.message}</Text>
+                )}
+              </>
+            )}
           />
-          <Input placeholder="Password" secureTextEntry mb={4} />
+
+          <Controller
+            control={control}
+            name="email"
+            rules={{
+              required: {
+                value: true,
+                message: "E-mail is required",
+              },
+            }}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  mb={4}
+                  placeholder="E-mail"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {error && <Text color={"red.500"}>{error.message}</Text>}
+              </>
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="password"
+            rules={{
+              required: {
+                value: true,
+                message: "Password is required",
+              },
+            }}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="Password"
+                  secureTextEntry
+                  mb={4}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {error && <Text color={"red.500"}>{error.message}</Text>}
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="password_confirm"
+            rules={{
+              required: {
+                value: true,
+                message: "Password confirmation is required",
+              },
+            }}
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="Confirm password"
+                  secureTextEntry
+                  mb={4}
+                  onChangeText={onChange}
+                  value={value}
+                  onSubmitEditing={handleSubmit(handleCreateAccount)}
+                  returnKeyType="send"
+                />
+                {error && <Text color={"red.500"}>{error.message}</Text>}
+              </>
+            )}
+          />
+
           {/* <Input placeholder="Confirm password" secureTextEntry mb={4} /> */}
-          <Button title="Create" />
+          <Button title="Create" onPress={handleSubmit(handleCreateAccount)} />
         </Center>
 
         <Center mt={24} style={{ gap: 12 }}>
