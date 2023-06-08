@@ -12,21 +12,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 const signUpSchema = z
   .object({
-    name: z.string({ required_error: "Name is required." }),
+    name: z.string({ required_error: "Name is required." }).nonempty(),
     email: z
-      .string({ required_error: "Email is required." })
+      .string({ required_error: "Email is required."})
+      .nonempty("Email is required.")
       .email({ message: "Email is invalid." }),
     password: z
-      .string({ required_error: "Password is required." })
+      .string({ required_error: "Password is required."})
+      .nonempty("Password is required.")
       .min(6, { message: "Password must have at least 6 characters." }),
     password_confirm: z
-      .string({ required_error: "Please, confirm your password." })
+      .string({ required_error: "Please, confirm your password."})
+      .nonempty("Please, confirm your password.")
       .min(6),
   })
   .refine((data) => data.password === data.password_confirm, {
     message: "Passwords must match.",
     path: ["password_confirm"],
-  });
+  })
+
 
 type FormDataProps = z.infer<typeof signUpSchema>;
 
