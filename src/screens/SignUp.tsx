@@ -150,17 +150,16 @@ export function SignUp() {
             )}
           />
 
-          {/* <Input placeholder="Confirm password" secureTextEntry /> */}
           <Button title="Create" onPress={handleSubmit(handleCreateAccount)} />
         </Center>
 
-        <Center mt={24} style={{ gap: 12 }}>
+
           <Button
             variant={"outline"}
             title="Back to login"
+            mt={10}
             onPress={handleNavigationToSignIn}
           />
-        </Center>
       </VStack>
     </ScrollView>
   );

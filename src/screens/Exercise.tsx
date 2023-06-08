@@ -22,7 +22,6 @@ import { Button } from "@components/Button";
 
 type Props = NativeStackScreenProps<AppRoutes, "exercise">;
 
-// todo refactor header component
 // todo implement API call to fetch exercise data
 
 export function Exercise({ route, navigation }: Props) {
@@ -45,7 +44,7 @@ export function Exercise({ route, navigation }: Props) {
           mb={8}
           alignItems={"center"}
         >
-          <Heading color="white" fontSize={"lg"} flexShrink={1}>
+          <Heading color="white" fontSize={"lg"} flexShrink={1} fontFamily={"heading"}>
             {id}
           </Heading>
 
