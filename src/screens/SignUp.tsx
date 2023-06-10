@@ -19,6 +19,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
 import { api } from "@services/api";
+import { isAxiosError } from "axios";
+import { AppError } from "@utils/AppError";
 
 const signUpSchema = z
   .object({
@@ -66,14 +68,11 @@ export function SignUp() {
 
     try {
       console.log("Making request to create user...");
-      const response = await api.post(
-        "/users",
-        {
-          name,
-          email,
-          password,
-        },
-      );
+      const response = await api.post("/users", {
+        name,
+        email,
+        password,
+      });
 
       console.log("Response:", response);
 
@@ -100,16 +99,10 @@ export function SignUp() {
         }, 1000)
       );
     } catch (error: any) {
-      if(error.response.data.message) {
-        return show({
-          title: error.response.data.message,
-          placement: "top",
-          bg: "red.500",
-          duration: 3000,
-        });
-      } 
+      const isAppError = error instanceof AppError;
+
       return show({
-        title: "Something went wrong. Please, try again.",
+        title: isAppError ? error.message : "Something went wrong.",
         placement: "top",
         bg: "red.500",
         duration: 3000,
