@@ -7,13 +7,13 @@ class UsersController {
     const { name, email, password } = request.body;
 
     if (!name || !email || !password) {
-      throw new AppError("Informe todos os campos (nome, email e senha).");
+      throw new AppError("Please, fill in all fields.");
     }
 
     const checkUserExists = await knex("users").where({ email }).first();
 
     if (checkUserExists) {
-      throw new AppError("Este e-mail já está em uso.");
+      throw new AppError("This e-mail already exists.");
     }
 
     const hashedPassword = await hash(password, 8);
@@ -34,21 +34,21 @@ class UsersController {
     const user = await knex("users").where({ id: user_id }).first();
 
     if (!user) {
-      throw new AppError("Usuário não encontrado", 404);
+      throw new AppError("User not found.", 404);
     }
 
     user.name = name ?? user.name;
 
     if (password && !old_password) {
       throw new AppError(
-        "Você precisa informar a senha antiga para definir a nova senha.",
+        "You need to provide your old password to set a new password.",
       );
     }
 
 
     if (!password && old_password) {
       throw new AppError(
-        "Informe a nova senha.",
+        "Provide your new password.",
       );
     }
 
@@ -56,7 +56,7 @@ class UsersController {
       const checkOldPassword = await compare(old_password, user.password);
 
       if (!checkOldPassword) {
-        throw new AppError("A senha antiga não confere.");
+        throw new AppError("The old password is incorrect.");
       }
 
       user.password = await hash(password, 8);

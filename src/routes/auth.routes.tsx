@@ -6,7 +6,7 @@ import {
 import { SignIn } from "../screens/SignIn";
 import { SignUp } from "../screens/SignUp";
 
-type AuthRoutes = {
+export type AuthRoutes = {
   SignIn: undefined;
   SignUp: undefined;
 };
