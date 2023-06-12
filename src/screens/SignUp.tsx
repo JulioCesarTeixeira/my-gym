@@ -19,37 +19,20 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
 import { api } from "@services/api";
-import { isAxiosError } from "axios";
 import { AppError } from "@utils/AppError";
-
-const signUpSchema = z
-  .object({
-    name: z.string({ required_error: "Name is required." }).nonempty(),
-    email: z
-      .string({ required_error: "Email is required." })
-      .nonempty("Email is required.")
-      .email({ message: "Email is invalid." }),
-    password: z
-      .string({ required_error: "Password is required." })
-      .nonempty("Password is required.")
-      .min(6, { message: "Password must have at least 6 characters." }),
-    password_confirm: z
-      .string({ required_error: "Please, confirm your password." })
-      .nonempty("Please, confirm your password.")
-      .min(6),
-  })
-  .refine((data) => data.password === data.password_confirm, {
-    message: "Passwords must match.",
-    path: ["password_confirm"],
-  });
-
-type FormDataProps = z.infer<typeof signUpSchema>;
+import { SignUpDTO, signUpSchema } from "@dtos/AuthDTO";
+import { useAuth } from "@hooks/useAuth";
 
 export function SignUp() {
   const navigation = useNavigation<AuthNavigatorRoutesProps>();
   const { show } = useToast();
+  const { onSignUp } = useAuth();
 
-  const { control, handleSubmit } = useForm<FormDataProps>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<SignUpDTO>({
     reValidateMode: "onChange",
     resolver: zodResolver(signUpSchema),
   });
@@ -63,27 +46,12 @@ export function SignUp() {
     email,
     password,
     password_confirm,
-  }: FormDataProps) {
+  }: SignUpDTO) {
     console.log({ name, email, password, password_confirm });
 
     try {
       console.log("Making request to create user...");
-      const response = await api.post("/users", {
-        name,
-        email,
-        password,
-      });
-
-      console.log("Response:", response);
-
-      if (response.status > 201) {
-        return show({
-          title: response.data.message,
-          placement: "top",
-          bg: "red.500",
-          duration: 3000,
-        });
-      }
+      await onSignUp({ name, email, password });
 
       console.log("User created successfully!");
       show({
@@ -92,12 +60,6 @@ export function SignUp() {
         bg: "green.500",
         duration: 3000,
       });
-
-      new Promise(() =>
-        setTimeout(() => {
-          navigation.navigate("SignIn");
-        }, 1000)
-      );
     } catch (error: any) {
       const isAppError = error instanceof AppError;
 
@@ -205,7 +167,12 @@ export function SignUp() {
             )}
           />
 
-          <Button title="Create" onPress={handleSubmit(handleCreateAccount)} />
+          <Button
+            title="Create"
+            onPress={handleSubmit(handleCreateAccount)}
+            isLoading={isSubmitting}
+            isDisabled={isSubmitting}
+          />
         </Center>
 
         <Button
@@ -213,6 +180,7 @@ export function SignUp() {
           title="Back to login"
           mt={10}
           onPress={handleNavigationToSignIn}
+          isDisabled={isSubmitting}
         />
       </VStack>
     </ScrollView>

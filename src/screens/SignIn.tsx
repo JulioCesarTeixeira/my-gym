@@ -1,4 +1,12 @@
-import { VStack, Text, Image, Center, Heading, ScrollView, useToast } from "native-base";
+import {
+  VStack,
+  Text,
+  Image,
+  Center,
+  Heading,
+  ScrollView,
+  useToast,
+} from "native-base";
 
 import BackgroundImage from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
@@ -6,74 +14,54 @@ import { Input } from "@components/Input";
 import { Button } from "@components/Button";
 import { useNavigation } from "@react-navigation/native";
 import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
-import { api } from "@services/api";
-import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-const LoginSchema = z.object({
-  email: z.string({ required_error: "Email is required." }).nonempty(),
-  password: z.string({ required_error: "Password is required." }).nonempty(),
-})
-
-type FormDataProps = z.infer<typeof LoginSchema>;
+import { useAuth } from "@hooks/useAuth";
+import { AppError } from "@utils/AppError";
+import { LoginSchema, SignInDTO } from "@dtos/AuthDTO";
 
 export function SignIn() {
   const navigation = useNavigation<AuthNavigatorRoutesProps>();
-  const {control, handleSubmit} = useForm<FormDataProps>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<SignInDTO>({
     resolver: zodResolver(LoginSchema),
-  })
+    defaultValues: {
+      email: "jcdt1992@hotmail.com",
+      password: "1234Test",
+    },
+  });
+  const { onSignIn } = useAuth();
   const { show } = useToast();
 
   function handleNavigationToSignUp() {
     navigation.navigate("SignUp");
   }
 
-  async function handleSignIn({ email, password }: FormDataProps) {
+  async function handleSignIn({ email, password }: SignInDTO) {
     try {
-      console.log("Authenticating user...");
-      const response = await api.post(
-        "/sessions",
-        {
-          email,
-          password,
-        },
-      );
+      console.log("Authenticating user...", password);
+      await onSignIn({ email, password });
+      console.log("User authenticated!");
 
-      console.log("Response:", response.data);
-
-      if (response.status > 201) {
-        return show({
-          title: response.data.message,
-          placement: "top",
-          bg: "red.500",
-          duration: 3000,
-        });
-      }
-      
       show({
         title: "User succesfully authenticated!",
         placement: "top",
         bg: "green.500",
         duration: 3000,
       });
-
-      new Promise(() =>
-        setTimeout(() => {
-          navigation.navigate("SignIn");
-        }, 1000)
-      );
     } catch (error: any) {
-      if(error.response.data.message) {
-        return show({
-          title: error.response.data.message,
-          placement: "top",
-          bg: "red.500",
-          duration: 3000,
-        });
-      } 
+      // Check if error is a treated error with a nicely formatted error message
+      const isAppError = error instanceof AppError;
+
+      const message = isAppError
+        ? error.message
+        : "Something went wrong. Try again later.";
+
       return show({
-        title: "Something went wrong. Please, try again.",
+        title: message,
         placement: "top",
         bg: "red.500",
         duration: 3000,
@@ -136,11 +124,19 @@ export function SignIn() {
                   onChangeText={onChange}
                   value={value}
                   errorMessage={error?.message}
+                  onSubmitEditing={handleSubmit(handleSignIn)}
+                  returnKeyType="send"
+                  returnKeyLabel="Sign in"
                 />
               </>
             )}
           />
-          <Button title="Sign in" onPress={handleSubmit(handleSignIn)} />
+          <Button
+            title="Sign in"
+            onPress={handleSubmit(handleSignIn)}
+            isLoading={isSubmitting}
+            isDisabled={isSubmitting}
+          />
         </Center>
 
         <Center mt={24} style={{ gap: 12 }}>
@@ -151,6 +147,7 @@ export function SignIn() {
             variant={"outline"}
             title="Create an account"
             onPress={handleNavigationToSignUp}
+            isDisabled={isSubmitting}
           />
         </Center>
       </VStack>

@@ -3,11 +3,12 @@ import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { useNavigation } from "@react-navigation/native";
 import { AppRoutesProps } from "@routes/app.routes";
-import { Center, HStack, Text, VStack, FlatList, Heading } from "native-base";
+import { HStack, Text, VStack, FlatList, Heading } from "native-base";
 import { useState } from "react";
 
 export function Home() {
   const { navigate } = useNavigation<AppRoutesProps>();
+
   const [groups, setGroups] = useState([
     "back",
     "chest",
