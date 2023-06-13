@@ -3,6 +3,7 @@ import { api } from "@services/api";
 import { UserDTO } from "@dtos/UserDTO";
 import { getUser, removeUser, saveUser } from "@storage/storageUser";
 import { SignInDTO, SignUpDTO } from "@dtos/AuthDTO";
+import { saveAuthToken } from "@storage/storageAuthToken";
 
 export type AuthContextProps = {
   user: UserDTO | null;
@@ -20,6 +21,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  async function storageUserAndToken(user: UserDTO, token: string) {
+    try {
+      setIsLoading(true);
+
+      // Attach token to all requests made to the API
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      await saveUser(user);
+      await saveAuthToken(token);
+      setUser(user);
+    } catch (error: any) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function onSignIn({ email, password }: SignInDTO) {
     try {
       const response = await api.post("/sessions", {
@@ -31,9 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.data.message);
       }
 
-      saveUser(response.data.user);
-      setUser(response.data.user);
-
+      if (response.data.user && response.data.token) {
+        await storageUserAndToken(response.data.user, response.data.token);
+      }
       return response;
     } catch (error: any) {
       throw error;
