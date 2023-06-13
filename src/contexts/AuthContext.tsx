@@ -3,7 +3,11 @@ import { api } from "@services/api";
 import { UserDTO } from "@dtos/UserDTO";
 import { getUser, removeUser, saveUser } from "@storage/storageUser";
 import { SignInDTO, SignUpDTO } from "@dtos/AuthDTO";
-import { saveAuthToken } from "@storage/storageAuthToken";
+import {
+  saveAuthToken,
+  getAuthToken,
+  removeAuthToken,
+} from "@storage/storageAuthToken";
 
 export type AuthContextProps = {
   user: UserDTO | null;
@@ -17,19 +21,33 @@ export const AuthContext = createContext<AuthContextProps>(
   {} as AuthContextProps
 );
 
+async function storageUpdateUserAndToken(user: UserDTO, token: string) {
+  try {
+    await saveUser(user);
+    await saveAuthToken(token);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  async function storageUserAndToken(user: UserDTO, token: string) {
+  async function storageRemoveUserAndToken() {
     try {
-      setIsLoading(true);
+      await removeUser();
+      await removeAuthToken();
+    } catch (error: any) {
+      throw error;
+    }
+  }
 
+  function userAndTokenUpdate(user: UserDTO, token: string) {
+    try {
       // Attach token to all requests made to the API
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      await saveUser(user);
-      await saveAuthToken(token);
       setUser(user);
     } catch (error: any) {
       throw error;
@@ -40,19 +58,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function onSignIn({ email, password }: SignInDTO) {
     try {
-      const response = await api.post("/sessions", {
+      setIsLoading(true);
+      const { data } = await api.post("/sessions", {
         email,
         password,
       });
 
-      if (response.status > 201) {
-        throw new Error(response.data.message);
+      if (data.user && data.token) {
+        await storageUpdateUserAndToken(data.user, data.token);
+        userAndTokenUpdate(data.user, data.token);
       }
-
-      if (response.data.user && response.data.token) {
-        await storageUserAndToken(response.data.user, response.data.token);
-      }
-      return response;
+      return data;
     } catch (error: any) {
       throw error;
     }
@@ -84,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Signing out...");
     try {
       setIsLoading(true);
-      await removeUser();
+      await storageRemoveUserAndToken();
       setUser(null);
     } catch (error: any) {
       throw error;
@@ -96,11 +112,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        setIsLoading(true);
         const user = await getUser();
+        const token = await getAuthToken();
 
-        if (user) {
-          setUser(user);
+        if (user && token) {
+          userAndTokenUpdate(user, token);
         }
       } catch (error) {
         console.log(error);
