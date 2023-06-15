@@ -2,6 +2,8 @@ import { ExerciseCard } from "@components/ExerciseCard";
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { ExerciseListSchema } from "@dtos/ExerciseDTO";
+import { useRefreshByUser } from "@hooks/useRefreshByUser";
+import { useRefreshOnFocus } from "@hooks/useRefreshOnFocus";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AppRoutesProps } from "@routes/app.routes";
 import { api } from "@services/api";
@@ -18,6 +20,7 @@ import {
   Box,
 } from "native-base";
 import { useCallback, useEffect, useState } from "react";
+import { RefreshControl } from "react-native";
 
 export function Home() {
   const { navigate } = useNavigation<AppRoutesProps>();
@@ -27,10 +30,19 @@ export function Home() {
     queryKey: ["groups"],
     queryFn: getGroupsAll,
   });
-  const { isLoading: isLoadingExercises, data: exercises } = useQuery({
+  const {
+    isLoading: isLoadingExercises,
+    data: exercises,
+    refetch: refetchExercises,
+    isFetching: isFetchingExercises,
+  } = useQuery({
     queryKey: ["exercises", groupSelected],
     queryFn: () => getExercisesByGroup(groupSelected),
   });
+
+  const { isRefetchingByUser, refetchByUser } =
+    useRefreshByUser(refetchExercises);
+  useRefreshOnFocus(refetchExercises);
 
   async function getGroupsAll() {
     try {
@@ -152,10 +164,12 @@ export function Home() {
             {exercises?.length ?? 0}
           </Text>
         </HStack>
-        {isLoadingExercises ? (
+        {isLoadingExercises || isFetchingExercises ? (
           <FlatList
             data={[1, 2, 3, 4]}
             keyExtractor={(item) => String(item)}
+            refreshing={isRefetchingByUser}
+            onRefresh={refetchByUser}
             renderItem={() => (
               <HStack
                 bg={"gray.500"}
@@ -183,6 +197,14 @@ export function Home() {
         ) : (
           <FlatList
             data={exercises}
+            refreshing={isRefetchingByUser}
+            onRefresh={refetchByUser}
+            refreshControl={
+              <RefreshControl
+                refreshing={isFetchingExercises}
+                onRefresh={refetchExercises}
+              />
+            }
             keyExtractor={(item) => `${item.name}-${item.id}`}
             renderItem={({ item }) => (
               <ExerciseCard

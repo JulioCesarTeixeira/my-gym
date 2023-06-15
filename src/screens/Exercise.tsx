@@ -8,6 +8,7 @@ import {
   Image,
   Box,
   ScrollView,
+  useToast,
 } from "native-base";
 import { TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -19,6 +20,10 @@ import BodySvg from "@assets/body.svg";
 import SeriesSvg from "@assets/series.svg";
 import RepsSvg from "@assets/repetitions.svg";
 import { Button } from "@components/Button";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
+import { ExerciseDTO, ExerciseSchema } from "@dtos/ExerciseDTO";
 
 type Props = NativeStackScreenProps<AppRoutes, "exercise">;
 
@@ -26,10 +31,42 @@ type Props = NativeStackScreenProps<AppRoutes, "exercise">;
 
 export function Exercise({ route, navigation }: Props) {
   const { id } = route.params;
+  const { show } = useToast();
+  const { data, isLoading, isFetching, refetch, error } = useQuery<ExerciseDTO>(
+    {
+      queryKey: ["exercise", id],
+      queryFn: () => getExerciseById(id),
+    }
+  );
+
+  const { name, series, repetitions, group, demo } = data || {};
   const { goBack } = useNavigation<AppRoutesProps>();
 
   function handleGoBack() {
     goBack();
+  }
+
+  async function getExerciseById(id: string) {
+    try {
+      const exercise = await api.get(`/exercises/${id}`);
+
+      const parsedExercise = ExerciseSchema.parse(exercise.data);
+
+      return parsedExercise;
+    } catch (error: any) {
+      const isAppError = error instanceof AppError;
+
+      const title = isAppError
+        ? error.message
+        : "Something went wrong when trying to get exercise :(";
+
+      show({
+        title,
+        bgColor: "red.500",
+        placement: "top",
+      });
+      throw error;
+    }
   }
 
   return (
@@ -44,14 +81,19 @@ export function Exercise({ route, navigation }: Props) {
           mb={8}
           alignItems={"center"}
         >
-          <Heading color="white" fontSize={"lg"} flexShrink={1} fontFamily={"heading"}>
-            {id}
+          <Heading
+            color="white"
+            fontSize={"lg"}
+            flexShrink={1}
+            fontFamily={"heading"}
+          >
+            {name}
           </Heading>
 
           <HStack alignItems={"center"}>
             <BodySvg />
             <Text color="gray.200" ml={1} textTransform={"capitalize"}>
-              Back
+              {group}
             </Text>
           </HStack>
         </HStack>
@@ -61,7 +103,7 @@ export function Exercise({ route, navigation }: Props) {
         <VStack p={8}>
           <Image
             source={{
-              uri: "https://images.unsplash.com/photo-1534872850130-5355701fcc89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1348&q=80",
+              uri: `${api.defaults.baseURL}/exercise/demo/${demo}`,
             }}
             alt={"Lat pulldown"}
             w="full"
@@ -80,13 +122,13 @@ export function Exercise({ route, navigation }: Props) {
               <HStack alignItems={"center"}>
                 <SeriesSvg />
                 <Text ml={2} color="gray.200">
-                  3 sets
+                  {series} sets
                 </Text>
               </HStack>
               <HStack alignItems={"center"}>
                 <RepsSvg />
                 <Text ml={2} color="gray.200">
-                  12 reps
+                  {repetitions} reps
                 </Text>
               </HStack>
             </HStack>
