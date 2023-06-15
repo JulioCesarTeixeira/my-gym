@@ -1,28 +1,43 @@
 import { ExerciseCard } from "@components/ExerciseCard";
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
-import { ExerciseListSchema, ExerciseDTO } from "@dtos/ExerciseDTO";
+import { ExerciseListSchema } from "@dtos/ExerciseDTO";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AppRoutesProps } from "@routes/app.routes";
 import { api } from "@services/api";
+import { useQuery } from "@tanstack/react-query";
 import { AppError } from "@utils/AppError";
-import { HStack, Text, VStack, FlatList, Heading, useToast } from "native-base";
+import {
+  HStack,
+  Text,
+  VStack,
+  FlatList,
+  Heading,
+  useToast,
+  Skeleton,
+  Box,
+} from "native-base";
 import { useCallback, useEffect, useState } from "react";
 
 export function Home() {
   const { navigate } = useNavigation<AppRoutesProps>();
   const { show } = useToast();
-
-  const [groups, setGroups] = useState<string[]>([]);
   const [groupSelected, setGroupSelected] = useState("costas");
-  const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
+  const { isLoading: isLoadingGroups, data: groups } = useQuery({
+    queryKey: ["groups"],
+    queryFn: getGroupsAll,
+  });
+  const { isLoading: isLoadingExercises, data: exercises } = useQuery({
+    queryKey: ["exercises", groupSelected],
+    queryFn: () => getExercisesByGroup(groupSelected),
+  });
 
   async function getGroupsAll() {
     try {
       const response = await api.get<string[]>("/groups");
       const fetchedGroups = response.data;
 
-      setGroups(fetchedGroups);
+      return fetchedGroups;
     } catch (error: any) {
       const isAppError = error instanceof AppError;
 
@@ -45,7 +60,7 @@ export function Home() {
 
       const exercises = ExerciseListSchema.parse(fetchedExercises);
 
-      setExercises(exercises);
+      return exercises;
     } catch (error: any) {
       const isAppError = error instanceof AppError;
 
@@ -81,23 +96,51 @@ export function Home() {
     <VStack flex={1}>
       <HomeHeader />
       <HStack>
-        <FlatList
-          horizontal
-          data={groups}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <Group
-              name={item}
-              isActive={item.toUpperCase() === groupSelected.toUpperCase()}
-              onPress={() => setGroupSelected(item)}
-            />
-          )}
-          showsHorizontalScrollIndicator={false}
-          _contentContainerStyle={{ px: 8 }}
-          my={10}
-          maxHeight={10}
-          minHeight={10}
-        />
+        {isLoadingGroups ? (
+          <FlatList
+            horizontal
+            data={[1, 2, 3, 4, 5]}
+            keyExtractor={(item) => String(item)}
+            renderItem={({ item }) => (
+              <Box
+                mr={4}
+                w={24}
+                h={10}
+                p={4}
+                bg="gray.600"
+                rounded={"md"}
+                justifyContent={"center"}
+                alignItems={"center"}
+                overflow={"hidden"}
+              >
+                <Skeleton.Text lines={1} fontSize={"xs"} size={10} />
+              </Box>
+            )}
+            showsHorizontalScrollIndicator={false}
+            _contentContainerStyle={{ px: 8 }}
+            my={10}
+            maxHeight={10}
+            minHeight={10}
+          />
+        ) : (
+          <FlatList
+            horizontal
+            data={groups}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <Group
+                name={item}
+                isActive={item.toUpperCase() === groupSelected.toUpperCase()}
+                onPress={() => setGroupSelected(item)}
+              />
+            )}
+            showsHorizontalScrollIndicator={false}
+            _contentContainerStyle={{ px: 8 }}
+            my={10}
+            maxHeight={10}
+            minHeight={10}
+          />
+        )}
       </HStack>
       <VStack flex={1} px={8}>
         <HStack justifyContent={"space-between"} mb={5}>
@@ -106,25 +149,55 @@ export function Home() {
           </Heading>
 
           <Text color={"gray.100"} fontSize={"md"}>
-            {exercises.length}
+            {exercises?.length ?? 0}
           </Text>
         </HStack>
-        <FlatList
-          data={exercises}
-          keyExtractor={(item) => `${item.name}-${item.id}`}
-          renderItem={({ item }) => (
-            <ExerciseCard
-              name={item.name}
-              repetitions={item.repetitions}
-              series={item.series}
-              demo={item.demo}
-              thumb={item.thumb}
-              onPress={() => handleExerciseSelect(item.id)}
-            />
-          )}
-          showsVerticalScrollIndicator={false}
-          _contentContainerStyle={{ pb: 20 }}
-        />
+        {isLoadingExercises ? (
+          <FlatList
+            data={[1, 2, 3, 4]}
+            keyExtractor={(item) => String(item)}
+            renderItem={() => (
+              <HStack
+                bg={"gray.500"}
+                alignItems={"center"}
+                p={2}
+                pr={4}
+                rounded="md"
+                mb={3}
+              >
+                <Skeleton
+                  w={16}
+                  h={16}
+                  mr={4}
+                  rounded="md"
+                  startColor="coolGray.100"
+                />
+                <VStack flex={1}>
+                  <Skeleton.Text lines={2} />
+                </VStack>
+              </HStack>
+            )}
+            showsVerticalScrollIndicator={false}
+            _contentContainerStyle={{ pb: 20 }}
+          />
+        ) : (
+          <FlatList
+            data={exercises}
+            keyExtractor={(item) => `${item.name}-${item.id}`}
+            renderItem={({ item }) => (
+              <ExerciseCard
+                name={item.name}
+                repetitions={item.repetitions}
+                series={item.series}
+                demo={item.demo}
+                thumb={item.thumb}
+                onPress={() => handleExerciseSelect(item.id)}
+              />
+            )}
+            showsVerticalScrollIndicator={false}
+            _contentContainerStyle={{ pb: 20 }}
+          />
+        )}
       </VStack>
     </VStack>
   );

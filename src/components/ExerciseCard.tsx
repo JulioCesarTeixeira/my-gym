@@ -3,6 +3,7 @@ import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 
 import { Entypo } from "@expo/vector-icons";
 import { ExerciseDTO } from "@dtos/ExerciseDTO";
+import { api } from "@services/api";
 
 type Props = TouchableOpacityProps &
   Omit<ExerciseDTO, "id" | "created_at" | "updated_at" | "group">;
@@ -26,9 +27,9 @@ export function ExerciseCard({
         mb={3}
       >
         <Image
-          // source={{
-          //   uri: thumb,
-          // }}
+          source={{
+            uri: `${api.defaults.baseURL}/exercise/thumb/${thumb}`,
+          }}
           fallbackSource={{ uri: "https://via.placeholder.com/150" }}
           alt="fitness image"
           width={16}
