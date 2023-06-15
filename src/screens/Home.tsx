@@ -1,59 +1,81 @@
 import { ExerciseCard } from "@components/ExerciseCard";
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
-import { useNavigation } from "@react-navigation/native";
+import { ExerciseListSchema, ExerciseDTO } from "@dtos/ExerciseDTO";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AppRoutesProps } from "@routes/app.routes";
-import { HStack, Text, VStack, FlatList, Heading } from "native-base";
-import { useState } from "react";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
+import { HStack, Text, VStack, FlatList, Heading, useToast } from "native-base";
+import { useCallback, useEffect, useState } from "react";
 
 export function Home() {
   const { navigate } = useNavigation<AppRoutesProps>();
+  const { show } = useToast();
 
-  const [groups, setGroups] = useState([
-    "back",
-    "chest",
-    "shoulders",
-    "triceps",
-    "biceps",
-    "legs",
-  ]);
-  const [groupSelected, setGroupSelected] = useState("back");
-  const [exercises, setExercises] = useState([
-    {
-      id: "1",
-      name: "Lat pulldown",
-      description: "3 x 12 reps - 60kg - 1 min rest",
-      image:
-        "https://images.unsplash.com/photo-1534872850130-5355701fcc89?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1348&q=80",
-    },
-    {
-      id: "2",
-      name: "Pull up",
-      description: "3 x 12 reps - bodyweight - 1 min rest",
-      image:
-        "https://images.unsplash.com/photo-1520334363269-c1b342d17261?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=782&q=80",
-    },
-    {
-      id: "3",
-      name: "Chin up",
-      description: "3 x 12 reps - bodyweight - 1 min rest",
-      image:
-        "https://images.unsplash.com/photo-1520334363269-c1b342d17261?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=782&q=80",
-    },
-    {
-      id: "4",
-      name: "Deadlift",
-      description: "3 x 12 reps - bodyweight - 1 min rest",
-      image:
-        "https://images.unsplash.com/photo-1520334363269-c1b342d17261?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=782&q=80",
-    },
-  ]);
+  const [groups, setGroups] = useState<string[]>([]);
+  const [groupSelected, setGroupSelected] = useState("costas");
+  const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
 
-  function handleExerciseSelect(id: string) {
+  async function getGroupsAll() {
+    try {
+      const response = await api.get<string[]>("/groups");
+      const fetchedGroups = response.data;
+
+      setGroups(fetchedGroups);
+    } catch (error: any) {
+      const isAppError = error instanceof AppError;
+
+      const title = isAppError
+        ? error.message
+        : "Something went wrong when trying to get muscle groups :(";
+
+      show({
+        title,
+        bgColor: "red.500",
+        placement: "top",
+      });
+    }
+  }
+
+  async function getExercisesByGroup(group: string) {
+    try {
+      const response = await api.get(`/exercises/bygroup/${group}`);
+      const fetchedExercises = response.data;
+
+      const exercises = ExerciseListSchema.parse(fetchedExercises);
+
+      setExercises(exercises);
+    } catch (error: any) {
+      const isAppError = error instanceof AppError;
+
+      const title = isAppError
+        ? error.message
+        : "Something went wrong when trying to get exercises :(";
+
+      show({
+        title,
+        bgColor: "red.500",
+        placement: "top",
+      });
+    }
+  }
+
+  function handleExerciseSelect(id: number) {
     navigate("exercise", {
-      id,
+      id: String(id),
     });
   }
+
+  useEffect(() => {
+    getGroupsAll();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getExercisesByGroup(groupSelected);
+    }, [groupSelected])
+  );
 
   return (
     <VStack flex={1}>
@@ -89,12 +111,14 @@ export function Home() {
         </HStack>
         <FlatList
           data={exercises}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => `${item.name}-${item.id}`}
           renderItem={({ item }) => (
             <ExerciseCard
               name={item.name}
-              description={item.description}
-              image={item.image}
+              repetitions={item.repetitions}
+              series={item.series}
+              demo={item.demo}
+              thumb={item.thumb}
               onPress={() => handleExerciseSelect(item.id)}
             />
           )}

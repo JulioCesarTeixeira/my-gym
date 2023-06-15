@@ -2,14 +2,19 @@ import { HStack, Heading, Image, VStack, Text, Icon } from "native-base";
 import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 
 import { Entypo } from "@expo/vector-icons";
+import { ExerciseDTO } from "@dtos/ExerciseDTO";
 
-type Props = TouchableOpacityProps & {
-  name: string;
-  description: string;
-  image: string;
-};
+type Props = TouchableOpacityProps &
+  Omit<ExerciseDTO, "id" | "created_at" | "updated_at" | "group">;
 
-export function ExerciseCard({ name, description, image, ...rest }: Props) {
+export function ExerciseCard({
+  name,
+  repetitions,
+  series,
+  demo,
+  thumb,
+  ...rest
+}: Props) {
   return (
     <TouchableOpacity {...rest}>
       <HStack
@@ -21,9 +26,10 @@ export function ExerciseCard({ name, description, image, ...rest }: Props) {
         mb={3}
       >
         <Image
-          source={{
-            uri: image,
-          }}
+          // source={{
+          //   uri: thumb,
+          // }}
+          fallbackSource={{ uri: "https://via.placeholder.com/150" }}
           alt="fitness image"
           width={16}
           height={16}
@@ -38,7 +44,7 @@ export function ExerciseCard({ name, description, image, ...rest }: Props) {
           </Heading>
 
           <Text color="gray.200" fontSize={"sm"} mt={1} numberOfLines={2}>
-            {description}
+            Series {series} | Reps {repetitions}
           </Text>
         </VStack>
 
