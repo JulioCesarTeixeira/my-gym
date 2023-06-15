@@ -3,8 +3,7 @@ import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { ExerciseListSchema } from "@dtos/ExerciseDTO";
 import { useRefreshByUser } from "@hooks/useRefreshByUser";
-import { useRefreshOnFocus } from "@hooks/useRefreshOnFocus";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { AppRoutesProps } from "@routes/app.routes";
 import { api } from "@services/api";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +18,7 @@ import {
   Skeleton,
   Box,
 } from "native-base";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { RefreshControl } from "react-native";
 
 export function Home() {
@@ -38,11 +37,13 @@ export function Home() {
   } = useQuery({
     queryKey: ["exercises", groupSelected],
     queryFn: () => getExercisesByGroup(groupSelected),
+    networkMode: "offlineFirst",
+    // 1 minute cache time
+    cacheTime: 1000 * 60,
   });
 
   const { isRefetchingByUser, refetchByUser } =
     useRefreshByUser(refetchExercises);
-  useRefreshOnFocus(refetchExercises);
 
   async function getGroupsAll() {
     try {
@@ -93,16 +94,6 @@ export function Home() {
       id: String(id),
     });
   }
-
-  useEffect(() => {
-    getGroupsAll();
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      getExercisesByGroup(groupSelected);
-    }, [groupSelected])
-  );
 
   return (
     <VStack flex={1}>

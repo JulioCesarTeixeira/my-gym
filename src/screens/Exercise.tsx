@@ -1,5 +1,4 @@
 import {
-  Center,
   HStack,
   Heading,
   Icon,
@@ -9,6 +8,7 @@ import {
   Box,
   ScrollView,
   useToast,
+  Skeleton,
 } from "native-base";
 import { TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -32,12 +32,12 @@ type Props = NativeStackScreenProps<AppRoutes, "exercise">;
 export function Exercise({ route, navigation }: Props) {
   const { id } = route.params;
   const { show } = useToast();
-  const { data, isLoading, isFetching, refetch, error } = useQuery<ExerciseDTO>(
-    {
-      queryKey: ["exercise", id],
-      queryFn: () => getExerciseById(id),
-    }
-  );
+  const { data, isLoading, isFetching } = useQuery<ExerciseDTO>({
+    queryKey: ["exercise", id],
+    queryFn: () => getExerciseById(id),
+  });
+
+  const isLoadingData = isLoading || isFetching;
 
   const { name, series, repetitions, group, demo } = data || {};
   const { goBack } = useNavigation<AppRoutesProps>();
@@ -81,37 +81,57 @@ export function Exercise({ route, navigation }: Props) {
           mb={8}
           alignItems={"center"}
         >
-          <Heading
-            color="white"
-            fontSize={"lg"}
-            flexShrink={1}
-            fontFamily={"heading"}
-          >
-            {name}
-          </Heading>
+          {isLoadingData ? (
+            <VStack flex={1}>
+              <Skeleton.Text lines={1} w={"48"} />
+            </VStack>
+          ) : (
+            <Heading
+              color="white"
+              fontSize={"lg"}
+              flexShrink={1}
+              fontFamily={"heading"}
+            >
+              {name}
+            </Heading>
+          )}
 
           <HStack alignItems={"center"}>
             <BodySvg />
-            <Text color="gray.200" ml={1} textTransform={"capitalize"}>
-              {group}
-            </Text>
+            {isLoadingData ? (
+              <Skeleton.Text lines={1} w={"12"} />
+            ) : (
+              <Text color="gray.200" ml={1} textTransform={"capitalize"}>
+                {group}
+              </Text>
+            )}
           </HStack>
         </HStack>
       </VStack>
 
       <ScrollView>
         <VStack p={8}>
-          <Image
-            source={{
-              uri: `${api.defaults.baseURL}/exercise/demo/${demo}`,
-            }}
-            alt={"Lat pulldown"}
-            w="full"
-            h={80}
-            mb={3}
-            rounded="lg"
-            resizeMode="cover"
-          />
+          {isLoadingData ? (
+            <Skeleton
+              w="full"
+              h={80}
+              mb={3}
+              rounded="lg"
+              startColor="coolGray.100"
+            />
+          ) : (
+            <Image
+              source={{
+                uri: `${api.defaults.baseURL}/exercise/demo/${demo}`,
+              }}
+              alt={"Lat pulldown"}
+              w="full"
+              h={80}
+              mb={3}
+              rounded="lg"
+              resizeMode="cover"
+            />
+          )}
 
           <Box bg={"gray.600"} rounded={"md"} px={4} py={4}>
             <HStack
@@ -121,18 +141,26 @@ export function Exercise({ route, navigation }: Props) {
             >
               <HStack alignItems={"center"}>
                 <SeriesSvg />
-                <Text ml={2} color="gray.200">
-                  {series} sets
-                </Text>
+                {isLoadingData ? (
+                  <Skeleton.Text lines={1} w={"12"} ml={2} />
+                ) : (
+                  <Text ml={2} color="gray.200">
+                    {series} sets
+                  </Text>
+                )}
               </HStack>
               <HStack alignItems={"center"}>
                 <RepsSvg />
-                <Text ml={2} color="gray.200">
-                  {repetitions} reps
-                </Text>
+                {isLoadingData ? (
+                  <Skeleton.Text lines={1} w={"12"} ml={2} />
+                ) : (
+                  <Text ml={2} color="gray.200">
+                    {repetitions} reps
+                  </Text>
+                )}
               </HStack>
             </HStack>
-            <Button title="Complete exercise" />
+            <Button title="Complete exercise" isDisabled={isLoadingData} />
           </Box>
         </VStack>
       </ScrollView>
