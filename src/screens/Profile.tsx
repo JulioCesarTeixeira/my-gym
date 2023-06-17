@@ -15,9 +15,23 @@ import { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import { Controller, useForm } from "react-hook-form";
+import { UserProfileDTO, userProfileDTOSchema } from "@dtos/UserDTO";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@hooks/useAuth";
 
 const PHOTO_SIZE = 33;
 export function Profile() {
+  const { user } = useAuth();
+
+  const { control, formState, handleSubmit } = useForm<UserProfileDTO>({
+    reValidateMode: "onChange",
+    resolver: zodResolver(userProfileDTOSchema),
+    defaultValues: {
+      name: user?.name,
+      email: user?.email,
+    },
+  });
   const { show } = useToast();
   const [isPhotoLoading, setIsPhotoLoading] = useState(false);
   const [userPhoto, setUserPhoto] = useState<string>(
@@ -67,6 +81,10 @@ export function Profile() {
       setIsPhotoLoading(false);
     }
   }
+
+  async function handleUpdateProfile({ name, email }: UserProfileDTO) {
+    console.log({ name, email });
+  }
   return (
     <VStack flex={1}>
       <ScreenHeader name="Profile" />
@@ -103,11 +121,39 @@ export function Profile() {
             </Text>
           </TouchableOpacity>
 
-          <Input placeholder={"Name"} bg={"gray.600"} />
-          <Input
-            placeholder={"julio@placeholder.com"}
-            bg={"gray.600"}
-            isDisabled
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="Name"
+                  autoCorrect={false}
+                  bg={"gray.600"}
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={error?.message}
+                />
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="E-mail"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  bg={"gray.600"}
+                  autoCorrect={false}
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={error?.message}
+                />
+              </>
+            )}
           />
         </Center>
         <VStack px={10} mt={12}>
@@ -119,15 +165,63 @@ export function Profile() {
           >
             Change password
           </Heading>
-          <Input placeholder={"Old password"} bg={"gray.600"} secureTextEntry />
-          <Input placeholder={"New password"} bg={"gray.600"} secureTextEntry />
-          <Input
-            placeholder="Confirm password"
-            bg={"gray.600"}
-            secureTextEntry
+          <Controller
+            control={control}
+            name="old_password"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="Old password"
+                  bg={"gray.600"}
+                  secureTextEntry
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={error?.message}
+                />
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="new_password"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="New password"
+                  bg={"gray.600"}
+                  secureTextEntry
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={error?.message}
+                />
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="password_confirm"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <>
+                <Input
+                  placeholder="Confirm new password"
+                  bg={"gray.600"}
+                  secureTextEntry
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={error?.message}
+                  onSubmitEditing={handleSubmit(handleUpdateProfile)}
+                  returnKeyType="send"
+                />
+              </>
+            )}
           />
 
-          <Button title={"Confirm"} variant={"solid"} mt={4} />
+          <Button
+            title={"Confirm"}
+            variant={"solid"}
+            mt={4}
+            onPress={handleSubmit(handleUpdateProfile)}
+          />
         </VStack>
       </ScrollView>
     </VStack>
