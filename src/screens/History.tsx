@@ -1,48 +1,46 @@
 import { HistoryCard } from "@components/HistoryCard";
 import { ScreenHeader } from "@components/ScreenHeader";
 import { Heading, VStack, Text } from "native-base";
-import { useState } from "react";
 import { SectionList } from "native-base";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@services/api";
+import { HistoryByDayDTO } from "@dtos/HistoryDTO";
 
 export function History() {
-  // const [exercises, setExercises] = useState([]);
-  const [exercises, setExercises] = useState([
-    {
-      title: "Today",
-      data: [
-        {
-          name: "Back",
-          description: "Lat pulldown",
-        },
-        {
-          description: "Lat pulldown",
-          name: "Back",
-        },
-      ],
+  const {
+    data: history = [],
+    isLoading: isLoadingHistory,
+    isFetching: isFetchingHistory,
+    refetch: refetchHistory,
+  } = useQuery<HistoryByDayDTO[]>({
+    queryKey: ["history"],
+    queryFn: async () => {
+      const res = await api.get("/history");
+      console.log(res.data);
+
+      return res.data;
     },
-    {
-      title: "Yesterday",
-      data: [
-        {
-          description: "Lat pulldown",
-          name: "Back",
-        },
-        {
-          description: "Lat pulldown",
-          name: "Back",
-        },
-      ],
+    onSuccess: (data) => {
+      console.log(data);
     },
-  ]);
+    refetchOnReconnect: true,
+  });
+
   return (
     <VStack flex={1}>
       <ScreenHeader name={"History"} />
 
       <SectionList
-        sections={exercises}
+        sections={history}
+        refreshing={isFetchingHistory}
+        onRefresh={refetchHistory}
         keyExtractor={(item, index) => item.name + index}
         renderItem={({ item }) => (
-          <HistoryCard name={item.name} description={item.description} />
+          <HistoryCard
+            name={item.group}
+            description={item.name}
+            time={item.hour}
+          />
         )}
         renderSectionHeader={({ section: { title } }) => (
           <Heading
@@ -57,7 +55,7 @@ export function History() {
           </Heading>
         )}
         contentContainerStyle={
-          !exercises.length && { flex: 1, justifyContent: "center" }
+          !history.length && { flex: 1, justifyContent: "center" }
         }
         ListEmptyComponent={() => (
           <Text

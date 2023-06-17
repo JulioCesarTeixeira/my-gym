@@ -1,9 +1,9 @@
-import { HStack, Heading, Image, VStack, Text, Icon } from "native-base";
+import { HStack, Heading, VStack, Text } from "native-base";
 
 type Props = {
   name: string;
   description: string;
-  time?: Date;
+  time?: string;
 };
 
 export function HistoryCard({ name, description, time }: Props) {
@@ -32,7 +32,7 @@ export function HistoryCard({ name, description, time }: Props) {
       </VStack>
 
       <Text color="gray.200" fontSize={"md"} mt={1} numberOfLines={1}>
-        {time?.toString() ?? "1hr ago"}
+        {time ?? "1hr ago"}
       </Text>
     </HStack>
   );

@@ -20,10 +20,11 @@ import BodySvg from "@assets/body.svg";
 import SeriesSvg from "@assets/series.svg";
 import RepsSvg from "@assets/repetitions.svg";
 import { Button } from "@components/Button";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@services/api";
 import { AppError } from "@utils/AppError";
 import { ExerciseDTO, ExerciseSchema } from "@dtos/ExerciseDTO";
+import { Loading } from "@components/Loading";
 
 type Props = NativeStackScreenProps<AppRoutes, "exercise">;
 
@@ -35,9 +36,40 @@ export function Exercise({ route, navigation }: Props) {
   const { data, isLoading, isFetching } = useQuery<ExerciseDTO>({
     queryKey: ["exercise", id],
     queryFn: () => getExerciseById(id),
+    networkMode: "offlineFirst",
+  });
+  const historyMutation = useMutation({
+    mutationKey: ["exercise", id],
+    mutationFn: () => {
+      return api.post("/history", {
+        exercise_id: id,
+      });
+    },
+    onMutate: () => {
+      show({
+        title: "Exercise registered successfully!",
+        bgColor: "green.500",
+        placement: "top",
+      });
+
+      navigation.navigate("home");
+    },
+    onError: (error: any) => {
+      const isAppError = error instanceof AppError;
+
+      const title = isAppError
+        ? error.message
+        : "Something went wrong when trying to register exercise :(";
+
+      show({
+        title,
+        bgColor: "red.500",
+        placement: "top",
+      });
+    },
   });
 
-  const isLoadingData = isLoading || isFetching;
+  const isLoadingData = isLoading;
 
   const { name, series, repetitions, group, demo } = data || {};
   const { goBack } = useNavigation<AppRoutesProps>();
@@ -69,6 +101,14 @@ export function Exercise({ route, navigation }: Props) {
     }
   }
 
+  if (isLoadingData) {
+    return <Loading />;
+  }
+
+  async function handleExerciseRegistration() {
+    await historyMutation.mutateAsync();
+  }
+
   return (
     <VStack flex={1}>
       <VStack px={8} pt={12} bg="gray.600">
@@ -81,7 +121,7 @@ export function Exercise({ route, navigation }: Props) {
           mb={8}
           alignItems={"center"}
         >
-          {isLoadingData ? (
+          {isFetching ? (
             <VStack flex={1}>
               <Skeleton.Text lines={1} w={"48"} />
             </VStack>
@@ -98,7 +138,7 @@ export function Exercise({ route, navigation }: Props) {
 
           <HStack alignItems={"center"}>
             <BodySvg />
-            {isLoadingData ? (
+            {isFetching ? (
               <Skeleton.Text lines={1} w={"12"} />
             ) : (
               <Text color="gray.200" ml={1} textTransform={"capitalize"}>
@@ -111,7 +151,7 @@ export function Exercise({ route, navigation }: Props) {
 
       <ScrollView>
         <VStack p={8}>
-          {isLoadingData ? (
+          {isFetching ? (
             <Skeleton
               w="full"
               h={80}
@@ -141,7 +181,7 @@ export function Exercise({ route, navigation }: Props) {
             >
               <HStack alignItems={"center"}>
                 <SeriesSvg />
-                {isLoadingData ? (
+                {isFetching ? (
                   <Skeleton.Text lines={1} w={"12"} ml={2} />
                 ) : (
                   <Text ml={2} color="gray.200">
@@ -151,7 +191,7 @@ export function Exercise({ route, navigation }: Props) {
               </HStack>
               <HStack alignItems={"center"}>
                 <RepsSvg />
-                {isLoadingData ? (
+                {isFetching ? (
                   <Skeleton.Text lines={1} w={"12"} ml={2} />
                 ) : (
                   <Text ml={2} color="gray.200">
@@ -160,7 +200,12 @@ export function Exercise({ route, navigation }: Props) {
                 )}
               </HStack>
             </HStack>
-            <Button title="Complete exercise" isDisabled={isLoadingData} />
+            <Button
+              title="Complete exercise"
+              isDisabled={isFetching || historyMutation.isLoading}
+              isLoading={historyMutation.isLoading}
+              onPress={handleExerciseRegistration}
+            />
           </Box>
         </VStack>
       </ScrollView>

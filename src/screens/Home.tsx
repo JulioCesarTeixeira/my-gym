@@ -24,7 +24,7 @@ import { RefreshControl } from "react-native";
 export function Home() {
   const { navigate } = useNavigation<AppRoutesProps>();
   const { show } = useToast();
-  const [groupSelected, setGroupSelected] = useState("costas");
+  const [groupSelected, setGroupSelected] = useState("antebraço");
   const { isLoading: isLoadingGroups, data: groups } = useQuery({
     queryKey: ["groups"],
     queryFn: getGroupsAll,
