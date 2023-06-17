@@ -7,7 +7,6 @@ import {
   ScrollView,
   useToast,
 } from "native-base";
-import { z } from "zod";
 
 import BackgroundImage from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
@@ -18,7 +17,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
-import { api } from "@services/api";
 import { AppError } from "@utils/AppError";
 import { SignUpDTO, signUpSchema } from "@dtos/AuthDTO";
 import { useAuth } from "@hooks/useAuth";

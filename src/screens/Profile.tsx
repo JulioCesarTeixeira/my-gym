@@ -24,8 +24,8 @@ const PHOTO_SIZE = 33;
 export function Profile() {
   const { user } = useAuth();
 
-  const { control, formState, handleSubmit } = useForm<UserProfileDTO>({
-    reValidateMode: "onChange",
+  const { control, handleSubmit } = useForm<UserProfileDTO>({
+    reValidateMode: "onBlur",
     resolver: zodResolver(userProfileDTOSchema),
     defaultValues: {
       name: user?.name,
@@ -82,8 +82,8 @@ export function Profile() {
     }
   }
 
-  async function handleUpdateProfile({ name, email }: UserProfileDTO) {
-    console.log({ name, email });
+  async function handleUpdateProfile(data: UserProfileDTO) {
+    console.log(data);
   }
   return (
     <VStack flex={1}>
