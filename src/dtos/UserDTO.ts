@@ -24,7 +24,7 @@ export const userProfileDTOSchema = z
         if (value === null || value === undefined) return undefined;
         return value.trim() === "" ? undefined : value;
       }),
-    new_password: z
+    password: z
       .string()
 
       .optional()
@@ -57,12 +57,12 @@ export const userProfileDTOSchema = z
   })
   .refine(
     (data) =>
-      !(data.old_password || data.new_password || data.password_confirm) ||
+      !(data.old_password || data.password || data.password_confirm) ||
       (data.old_password &&
-        data.new_password &&
+        data.password &&
         data.password_confirm &&
         data.old_password.trim() !== "" &&
-        data.new_password.trim() !== "" &&
+        data.password.trim() !== "" &&
         data.password_confirm.trim() !== ""),
     {
       message: "All password fields must be filled if one is filled.",
@@ -71,11 +71,11 @@ export const userProfileDTOSchema = z
   )
   .refine(
     (data) =>
-      data.new_password === undefined ||
+      data.password === undefined ||
       data.old_password === undefined ||
-      data.new_password.trim() === "" ||
+      data.password.trim() === "" ||
       data.old_password.trim() === "" ||
-      data.new_password !== data.old_password,
+      data.password !== data.old_password,
     {
       message: "New password must be different from old password.",
       path: ["new_password"],
@@ -83,11 +83,11 @@ export const userProfileDTOSchema = z
   )
   .refine(
     (data) =>
-      data.new_password === undefined ||
+      data.password === undefined ||
       data.password_confirm === undefined ||
-      data.new_password.trim() === "" ||
+      data.password.trim() === "" ||
       data.password_confirm.trim() === "" ||
-      data.new_password === data.password_confirm,
+      data.password === data.password_confirm,
     {
       message: "Passwords must match.",
       path: ["password_confirm"],
@@ -95,9 +95,9 @@ export const userProfileDTOSchema = z
   )
   .refine(
     (data) =>
-      data.new_password === undefined ||
-      data.new_password.trim() === "" ||
-      data.new_password.length >= 6,
+      data.password === undefined ||
+      data.password.trim() === "" ||
+      data.password.length >= 6,
     {
       message: "Password must have at least 6 characters.",
       path: ["new_password"],

@@ -15,6 +15,7 @@ export type AuthContextProps = {
   onSignUp: (data: Omit<SignUpDTO, "password_confirm">) => Promise<any>;
   onSignOut: () => void;
   isLoading: boolean;
+  updateUser(data: Partial<UserDTO>): Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextProps>(
@@ -58,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function onSignIn({ email, password }: SignInDTO) {
     try {
-      setIsLoading(true);
       const { data } = await api.post("/sessions", {
         email,
         password,
@@ -128,9 +128,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
+  async function updateUserProfile(data: Partial<UserDTO>) {
+    try {
+      const updatedUser: UserDTO | null = user ? { ...user, ...data } : null;
+      if (!updatedUser) {
+        return;
+      }
+
+      setUser(updatedUser);
+      await saveUser(updatedUser);
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
   return (
     <AuthContext.Provider
-      value={{ onSignIn, onSignUp, user, onSignOut, isLoading }}
+      value={{
+        onSignIn,
+        onSignUp,
+        user,
+        onSignOut,
+        isLoading,
+        updateUser: updateUserProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

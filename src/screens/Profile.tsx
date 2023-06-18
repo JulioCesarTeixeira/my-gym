@@ -19,17 +19,32 @@ import { Controller, useForm } from "react-hook-form";
 import { UserProfileDTO, userProfileDTOSchema } from "@dtos/UserDTO";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
+
+// function to replace spaces by underlines
+function replaceSpacesByUnderlines(str: string) {
+  return str.replace(/\s/g, "_");
+}
 
 const PHOTO_SIZE = 33;
 export function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
-  const { control, handleSubmit } = useForm<UserProfileDTO>({
+  const { control, handleSubmit, reset } = useForm<UserProfileDTO>({
     reValidateMode: "onBlur",
     resolver: zodResolver(userProfileDTOSchema),
     defaultValues: {
       name: user?.name,
       email: user?.email,
+    },
+  });
+  const profileFormMutation = useMutation({
+    mutationFn: async (data: UserProfileDTO) => {
+      await api.put("/users", data);
+
+      return data;
     },
   });
   const { show } = useToast();
@@ -71,19 +86,76 @@ export function Profile() {
           });
         }
 
-        console.log(photoInfo);
+        const photoExtension = photoInfo.uri.split(".").pop();
 
-        setUserPhoto(selectedPhoto.assets[0].uri);
+        const photoFile = {
+          uri: photoInfo.uri,
+          name: replaceSpacesByUnderlines(
+            `${user?.name}.${photoExtension}`
+          ).toLowerCase(),
+          type: `${selectedPhoto.assets[0].type}/${photoExtension}`,
+        } as any;
+
+        const userPhotoUploadForm = new FormData();
+
+        userPhotoUploadForm.append("avatar", photoFile);
+
+        await api.patch("/users/avatar", userPhotoUploadForm);
+
+        setUserPhoto(photoFile.uri);
+
+        show({
+          title: "Profile photo updated",
+          placement: "top",
+          bg: "green.500",
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.log(error);
+      const isAppError = error instanceof AppError;
+
+      show({
+        title: isAppError ? error.message : "Error updating profile photo",
+        placement: "top",
+        bg: "red.500",
+        duration: 3000,
+      });
     } finally {
       setIsPhotoLoading(false);
     }
   }
 
   async function handleUpdateProfile(data: UserProfileDTO) {
-    console.log(data);
+    try {
+      console.log(data);
+      await profileFormMutation.mutateAsync(data);
+
+      const { email, name } = data;
+
+      updateUser({ email, name });
+
+      reset({
+        name,
+        email,
+      });
+
+      show({
+        title: "Profile updated",
+        placement: "top",
+        bg: "green.500",
+        duration: 3000,
+      });
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+
+      show({
+        title: isAppError ? error.message : "Error updating profile",
+        placement: "top",
+        bg: "red.500",
+        duration: 3000,
+      });
+    }
   }
   return (
     <VStack flex={1}>
@@ -140,14 +212,15 @@ export function Profile() {
           <Controller
             control={control}
             name="email"
-            render={({ field: { onChange, value }, fieldState: { error } }) => (
+            render={({ field: { value, onChange }, fieldState: { error } }) => (
               <>
                 <Input
                   placeholder="E-mail"
                   keyboardType="email-address"
+                  isDisabled
                   autoCapitalize="none"
                   bg={"gray.600"}
-                  autoCorrect={false}
+                  isReadOnly
                   onChangeText={onChange}
                   value={value}
                   errorMessage={error?.message}
@@ -183,7 +256,7 @@ export function Profile() {
           />
           <Controller
             control={control}
-            name="new_password"
+            name="password"
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <>
                 <Input
@@ -219,6 +292,7 @@ export function Profile() {
           <Button
             title={"Confirm"}
             variant={"solid"}
+            isLoading={profileFormMutation.isLoading}
             mt={4}
             onPress={handleSubmit(handleUpdateProfile)}
           />
