@@ -22,6 +22,7 @@ import { useAuth } from "@hooks/useAuth";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@services/api";
 import { AppError } from "@utils/AppError";
+import UserPhotoDefault from "@assets/userPhotoDefault.png";
 
 // function to replace spaces by underlines
 function replaceSpacesByUnderlines(str: string) {
@@ -49,9 +50,6 @@ export function Profile() {
   });
   const { show } = useToast();
   const [isPhotoLoading, setIsPhotoLoading] = useState(false);
-  const [userPhoto, setUserPhoto] = useState<string>(
-    "https://github.com/JulioCesarTeixeira.png"
-  );
 
   async function handlePickImage() {
     try {
@@ -77,7 +75,7 @@ export function Profile() {
           selectedPhoto.assets[0].uri
         );
 
-        if (photoInfo.exists && photoInfo.size / 1024 / 1024 > 3) {
+        if (photoInfo.exists && photoInfo.size / 1024 / 1024 > 5) {
           return show({
             title: "Image size is too big",
             placement: "top",
@@ -100,9 +98,17 @@ export function Profile() {
 
         userPhotoUploadForm.append("avatar", photoFile);
 
-        await api.patch("/users/avatar", userPhotoUploadForm);
+        const avatarResponse = await api.patch(
+          "/users/avatar",
+          userPhotoUploadForm,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
-        setUserPhoto(photoFile.uri);
+        updateUser({ avatar: avatarResponse.data.avatar });
 
         show({
           title: "Profile photo updated",
@@ -157,6 +163,7 @@ export function Profile() {
       });
     }
   }
+
   return (
     <VStack flex={1}>
       <ScreenHeader name="Profile" />
@@ -177,7 +184,11 @@ export function Profile() {
           ) : (
             <UserPhoto
               size={PHOTO_SIZE}
-              source={{ uri: userPhoto }}
+              source={
+                user?.avatar
+                  ? { uri: `${api.defaults.baseURL}/avatar/${user?.avatar}` }
+                  : UserPhotoDefault
+              }
               alt={"User profile photo"}
             />
           )}
