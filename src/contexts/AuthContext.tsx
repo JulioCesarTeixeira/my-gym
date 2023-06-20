@@ -22,10 +22,14 @@ export const AuthContext = createContext<AuthContextProps>(
   {} as AuthContextProps
 );
 
-async function storageUpdateUserAndToken(user: UserDTO, token: string) {
+async function storageUpdateUserAndToken(
+  user: UserDTO,
+  token: string,
+  refresh_token: string
+) {
   try {
     await saveUser(user);
-    await saveAuthToken(token);
+    await saveAuthToken({ token, refresh_token });
   } catch (error: any) {
     throw error;
   }
@@ -64,8 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      if (data.user && data.token) {
-        await storageUpdateUserAndToken(data.user, data.token);
+      if (data.user && data.token && data.refresh_token) {
+        await storageUpdateUserAndToken(
+          data.user,
+          data.token,
+          data.refresh_token
+        );
         userAndTokenUpdate(data.user, data.token);
       }
       return data;
@@ -113,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function loadUser() {
       try {
         const user = await getUser();
-        const token = await getAuthToken();
+        const { token } = await getAuthToken();
 
         if (user && token) {
           userAndTokenUpdate(user, token);
@@ -141,6 +149,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   }
+
+  useEffect(() => {
+    const subscribe = api.registerInterceptorsTokenManager(onSignOut);
+
+    return () => subscribe();
+  }, [onSignOut]);
 
   return (
     <AuthContext.Provider
