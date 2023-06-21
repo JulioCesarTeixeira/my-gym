@@ -29,8 +29,8 @@ export function SignIn() {
   } = useForm<SignInDTO>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "jcdt1992@hotmail.com",
-      password: "1234Test",
+      email: "",
+      password: "",
     },
   });
   const { onSignIn } = useAuth();
